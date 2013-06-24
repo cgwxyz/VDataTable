@@ -90,9 +90,10 @@ var VDataTable = function(node,opts) {
 					$('<li class="vdata_li">'+__parseLang__('nodata')+'</li>').appendTo($(tmp_id));
 				}else{
 					$.each(source_data.data,function(index,value){
-						var unique_value = __initItem__(tmp_id,index,value);
+						var unique_value = __initItem__(tmp_id,value);
 						__initItemEventHandler__(unique_value);
 					});
+					__colorLine__();
 					//show op bar
 					__showOpBar__($(tmp_id));
 					//show select bar
@@ -105,7 +106,7 @@ var VDataTable = function(node,opts) {
 			/*}
 		})*/
 	}
-	function __initItem__(parent_id,index,value){
+	function __initItem__(parent_id,value){
 		var unique_value = 0;
 		$.each(value,function(key,val){
 			if(key==opts.uniqueID){//unique ID
@@ -127,11 +128,6 @@ var VDataTable = function(node,opts) {
 		str += '</li>';
 		var tmp_item = $(str);
 		tmp_item.appendTo($(parent_id));
-
-		//split with color
-		if(index %2 == 0){
-			tmp_item.addClass('spec');
-		}
 		return unique_value;
 	}
 	function __initItemEventHandler__(unique_value){
@@ -194,6 +190,15 @@ var VDataTable = function(node,opts) {
 				.css('top',tmp_pos.top+25+'px')
 				.css('width',$(this).css('width'))
 				.show();
+		});
+	}
+	function __colorLine__(){
+		$('.vdata_li').each(function(index){
+			if( index%2 == 0 )
+				$(this).addClass('spec');
+			else{
+				$(this).removeClass('spec');
+			}
 		});
 	}
 	
@@ -266,13 +271,13 @@ var VDataTable = function(node,opts) {
 		var tmp_name=opts.prefix+'key[]';
 		switch(event.data.msg){
 			case 1:
-				$("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).attr('checked',true);$(this).parent().parent().toggleClass('getchecked');});
+				$("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).attr('checked',true);$(this).parent().parent().addClass('getchecked');});
 			break;
 			case 2:
 				$("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).attr('checked',!$(this).attr('checked'))});
 			break;
 			case 3:
-				$("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){$(this).attr('checked',false);$(this).parent().parent().toggleClass('getchecked');});	
+				$("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){$(this).attr('checked',false);$(this).parent().parent().removeClass('getchecked');});	
 			break;
 		}
 	}
@@ -282,11 +287,15 @@ var VDataTable = function(node,opts) {
 			alert("同样键值的记录已经存在，不允许添加");
 		}else{
 			var tmp_id = '#'+opts.m_data_obj;
+			var unique_value = __initItem__(tmp_id,obj);
+			__initItemEventHandler__(unique_value);
+			__colorLine__();
 		}
 	}
 	function __removeItem__(key){
 		var tmp_box_id = '#'+opts.prefix+'item_'+key;
 		$(tmp_box_id).remove();
+		__colorLine__();
 	}
 };//--]Plugin Define
 
