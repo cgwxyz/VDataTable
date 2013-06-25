@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>VDataTable Demo</title>
+    <style type="text/css">
+      form p { min-height: 20px;}
+	  #shower{
+		width:600px;
+	  }
+	  ul#vtable_title{padding:0;
+		margin:0;
+			width:100%;
+			height:25px;
+			line-height:25px;
+			list-style-type:none;
+			border:0px;
+	  }
+	  ul#vtable_title li{
+		display:inline;
+		float:left;
+		border:0px;
+		border-bottom:1px solid #CCC;
+	  }
+	  ul#vtable_data{
+		padding:0;
+		margin:0;
+		width:100%;
+		line-height:25px;
+		list-style-type:none;
+		border:0px;
+	  }
+	  ul#vtable_data li{
+		width:100%;
+		display:inline;
+		float:left;
+		border:0px;
+		border-bottom:1px solid #CCC;
+	  }
+	  .vdata_pagebar_li {
+		text-align:right;
+		font-size:12px;
+		color:#333;
+		border:0px;
+	  }
+	  .vdata_pagebar_li a{
+		font-size:12px;
+		color:#006699;
+		text-decoration:none;
+		cursor:pointer;
+	  }
+	  .vdata_select_li a{
+		font-size:12px;
+		color:#006699;
+		text-decoration:none;
+		cursor:pointer;
+		padding:0px;
+		padding-left:2px;
+		padding-right:2px;
+	  }
+	  #op_bar{
+		width:100%;
+		height:25px;
+		line-height:25px;
+		text-align:left;
+		font-size:12px;
+		color:#333;
+		/*border:1px solid #CCC;*/
+		background-color:#FFF;
+	  }
+	  #op_bar a{
+		color:#0099CC;
+		padding-left:2px;
+		padding-right:2px;
+	  }
+	  .spec{
+		background-color:#F1D574;
+	  }
+	  .curr{
+	  	background-color:#FF0000;
+	  }
+	  .yselected{
+		background-color:#0099FF;
+	  }
+	  .getchecked{
+		background-color:#0099CC;
+	  }
+	  
+	  #debugbox{
+		width:100%;
+		height:200px;
+		line-height:20px;
+		border:1px solid #CCC;
+		clear:both;
+	  }
+    </style>
+</head>
+<body>
+    <h2>Table</h2>
+	<div id="shower">
+	</div>
+    <script src="./jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+    <script src="./jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+    <script type="text/javascript" language="javascript" charset="utf-8">
+	var mytable = 0;
+	$(document).ready(function(){
+		mytable = $('#shower').VDataTable({
+			m_title_obj:'vtable_title',
+			m_data_obj:'vtable_data',
+			uniqueID:'id',
+			target:'#shower',
+			pagelimit:10,
+			pageCallback:'showUserList',
+			op:[
+				{
+					'content':'编辑',
+					'desc':'编辑此记录',
+					'callback':'func1'
+				},{
+					'content':'删除',
+					'desc':'删除此记录',
+					'callback':'func2'
+				}
+			],
+			TitleBar:{//Title & data defintion
+					'id':{
+						'title':'ID',  //ID=>id 
+						'w':'10%',
+						'align':'left',
+						'type':'checkbox'  //ID=>id 
+					},
+					'name':{
+						'title':'Name',//with default view
+						'w':'40%',
+						'align':'left',
+						'type':'html'  //ID=>id 
+					},
+					'email':{
+						'title':'Email',
+						'w':'50%',
+						'align':'left',
+						'type':'href',
+						'title':'Email',
+						'src':''
+					}
+			},
+			lang:{
+				nodata:'No data founded',
+				first:'First',
+				next:'Next',
+				prev:'Previous',
+				last:'Last'
+			}
+		});
+	});
+	function func1(){
+		//alert('func1:'+mytable.getKeyValue());
+		doAddData();
+	}
+	function func2(data){
+		if(!confirm("确定删除此记录")){
+			return false;
+		}
+		var key = mytable.getKeyValue();
+		if(key === false){
+			alert("未指定操作记录");
+			return false;
+		}
+		mytable.removeItem(key);
+	}
+	function showUserList(page){
+		alert("get page:"+page);
+	}
+	function doAddData(){
+		var obj = {
+			'id':7123128,
+			'name':'naasd1',
+			'email':'naasd1@abc.com'
+		};
+		mytable.addItem(obj);
+	}
+    </script>	
+	<div id="debugbox"></div>
+</body>
+</html>
