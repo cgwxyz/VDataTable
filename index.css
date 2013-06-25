@@ -1,0 +1,77 @@
+ul#vtable_title{padding:0;
+		margin:0;
+			width:100%;
+			height:25px;
+			line-height:25px;
+			list-style-type:none;
+			border:0px;
+	  }
+	  ul#vtable_title li{
+		display:inline;
+		float:left;
+		border:0px;
+		border-bottom:1px solid #CCC;
+	  }
+	  ul#vtable_data{
+		padding:0;
+		margin:0;
+		width:100%;
+		line-height:25px;
+		list-style-type:none;
+		border:0px;
+	  }
+	  ul#vtable_data li{
+		width:100%;
+		display:inline;
+		float:left;
+		border:0px;
+		border-bottom:1px solid #CCC;
+	  }
+	  .vdata_pagebar_li {
+		text-align:right;
+		font-size:12px;
+		color:#333;
+		border:0px;
+	  }
+	  .vdata_pagebar_li a{
+		font-size:12px;
+		color:#006699;
+		text-decoration:none;
+		cursor:pointer;
+	  }
+	  .vdata_select_li a{
+		font-size:12px;
+		color:#006699;
+		text-decoration:none;
+		cursor:pointer;
+		padding:0px;
+		padding-left:2px;
+		padding-right:2px;
+	  }
+	  #op_bar{
+		width:100%;
+		height:25px;
+		line-height:25px;
+		text-align:left;
+		font-size:12px;
+		color:#333;
+		/*border:1px solid #CCC;*/
+		background-color:#FFF;
+	  }
+	  #op_bar a{
+		color:#0099CC;
+		padding-left:2px;
+		padding-right:2px;
+	  }
+	  .spec{
+		background-color:#F1D574;
+	  }
+	  .curr{
+	  	background-color:#FF0000;
+	  }
+	  .yselected{
+		background-color:#0099FF;
+	  }
+	  .getchecked{
+		background-color:#0099CC;
+	  }
