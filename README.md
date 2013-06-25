@@ -25,7 +25,6 @@ usage:
 			m_title_obj:'vtable_title',
 			m_data_obj:'vtable_data',
 			uniqueID:'id',
-			target:'#shower',
 			pagelimit:10,
 			pageCallback:'showUserList',
 			op:[
@@ -73,6 +72,9 @@ usage:
 	function func1(){
 
 	}
+
 	function func2(data){
 		
 	}
+	
+</script>
