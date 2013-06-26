@@ -14,11 +14,14 @@ var VDataTable = function(node,opts) {
 
     //Public Methods
     $.extend(me, {
-        getKeyValue: function() {         
+        getKeyValue: function() {    
 			return __getKeyValue__();
         },
-		removeItem: function(id) {         
+		removeItem: function(id) {
 			return __removeItem__(id);
+        },
+		loadDataByPage: function(page) {
+			return __loadData__(page);
         },
 		addItem: function(obj) {
 			return __addItem__(obj);
@@ -37,7 +40,7 @@ var VDataTable = function(node,opts) {
 	var curr_key_id = '';
 	var mouse_move_direct = 0;
 	var prev_mouse_posy = 0;
-	
+	var numPat = new RegExp('^[0-9]+$','i'); 
     //init the plugin
     function __init__(){
 		__initwrapper__();
@@ -46,12 +49,26 @@ var VDataTable = function(node,opts) {
     __init__();
 		
 	function __initwrapper__(){
-		$mine.append('<ul id="'+opts.m_title_obj+'"></ul><ul id="'+opts.m_data_obj+'"></ul>');
+		$mine.append('<ul id="'+opts.m_title_obj+'"></ul><ul id="'+opts.m_data_obj+'"></ul><ul id="'+opts.m_ctrl_obj+'"></ul>');
 		var tmp_id = '#'+opts.m_title_obj;
 		$.each(opts.TitleBar,function(index,value){
-			$('<li style="width:'+value.w+';text-align:'+value.align+';">'+value.title+'</li>').appendTo($(tmp_id));
+			var tmp_obj = $('<li style="width:'+value.w+';text-align:'+value.align+';"></li>');
+			tmp_obj.appendTo($(tmp_id));
+			if(value.hasOwnProperty('display') && !value.display)
+				tmp_obj.html('&nbsp;');
+			else
+				tmp_obj.html(value.title);
 		});
-		__loadData__();
+		//show op bar
+		__showOpBar__($(tmp_id));
+		//show select bar		
+		var ctrl_id = '#'+opts.m_ctrl_obj;
+		//$(ctrl_id).html('');
+		$('<li class="vdata_select_li" id="vdata_select_li"></li>').appendTo($(ctrl_id));
+		__showSelectBar__();
+		//show page bar
+		$('<li class="vdata_pagebar_li" id="vdata_pagebar_li"></li>').appendTo($(ctrl_id));
+		__loadData__(curr_page);
 	}
 	function __parseLang__(key,data){
 		if(arguments.length==0){
@@ -75,14 +92,14 @@ var VDataTable = function(node,opts) {
 		}
 		return target_word;
 	}
-	function __loadData__(){
-		var source_data = '{"total":20,"total_page":5,"data":[{"id":0,"name":"usera8askd65465","email":"ussd0@abc.com"},{"id":1,"name":"user1","email":"ussd1@abc.com"},{"id":2,"name":"user2","email":"ussd2@abc.com"},{"id":3,"name":"user3","email":"ussd3@abc.com"},{"id":4,"name":"user4","email":"ussd4@abc.com"},{"id":5,"name":"user5","email":"ussd5@abc.com"},{"id":6,"name":"user6","email":"ussd6@abc.com"},{"id":7,"name":"user7","email":"ussd7@abc.com"},{"id":8,"name":"user8","email":"ussd8@abc.com"},{"id":9,"name":"user9","email":"ussd9@abc.com"}]}';
-		/*$.ajax({
+	function __loadData__(page){
+		$('#op_bar').hide();
+		$.ajax({
 			url:opts.source,
-			type:'post',
-			data:{ss:Math.random()},
-			success:function(res){*/
-			source_data = $.parseJSON(source_data);
+			type:opts.request_way,
+			data:{page:page,pagelimit:opts.pagelimit,ss:Math.random()},
+			success:function(res){
+				source_data = $.parseJSON(res);
 				var tmp_id = '#'+opts.m_data_obj;
 				$('.vdata_li').remove();
 				var total = source_data.data.length;
@@ -94,59 +111,69 @@ var VDataTable = function(node,opts) {
 						__initItemEventHandler__(unique_value);
 					});
 					__colorLine__();
-					//show op bar
-					__showOpBar__($(tmp_id));
-					//show select bar
-					$('<li class="vdata_select_li" id="vdata_select_li"></li>').appendTo($(tmp_id));
-					__showSelectBar__();
-					//show page bar
-					$('<li class="vdata_pagebar_li" id="vdata_pagebar_li"></li>').appendTo($(tmp_id));
-					__showPageBar__(source_data.total,source_data.total_page,curr_page);
+					__showPageBar__(source_data.total,source_data.total_page,page);
 				}
-			/*}
-		})*/
+			}
+		});
+	}
+	function renderItem(render,key,data){
+		return render.replace('%key%',key).replace('%%',data);
 	}
 	function __initItem__(parent_id,value,default_insert_way){
 		var unique_value = 0;
+		var unique_key = '';
 		$.each(value,function(key,val){
 			if(key==opts.uniqueID){//unique ID
 				unique_value = val;
+				unique_key = key;
 			}
 		});
-		var str = '<li class="vdata_li" id="'+opts.prefix+'item_'+unique_value+'">';
-		$.each(value,function(key,val){
-			if(key==opts.uniqueID){//unique ID
-				if(opts.TitleBar[key]['type']=='checkbox'){
-					str += '<div style="float:left;width:10%"><input type="checkbox" id="'+opts.prefix+'key_'+unique_value+'" value="'+val+'" name="'+opts.prefix+'key[]"></div>';
-				}else{
-					str += '<div style="float:left;width:40%;word-wrap:break-word; overflow:hidden;"  id="'+opts.prefix+key+'_'+unique_value+'">'+val+'</div>';
-				}
-			}else{
-				str += '<div style="float:left;width:45%;word-wrap:break-word; overflow:hidden;" id="'+opts.prefix+key+'_'+unique_value+'">'+val+'</div>';	
-			}
-		});
-		str += '</li>';
-		var tmp_item = $(str);
+		if(unique_key == ''){
+			alert("没有找到主键，请检查数据样式");
+			return false;
+		}
+		var tmp_line = $('<li class="vdata_li" id="'+opts.prefix+'item_'+unique_value+'"></li>');
 		if(default_insert_way == 0)
-			tmp_item.appendTo($(parent_id));
+			tmp_line.appendTo($(parent_id));
 		else
-			tmp_item.prependTo($(parent_id));
+			tmp_line.prependTo($(parent_id));
+		
+		$.each(opts.TitleBar,function(key,val){
+				var key_bak = opts.uniqueID+'_bak';
+				var tmp_item = $('<div id="'+opts.prefix+key+'_'+unique_value+'"></div>');
+				if(key == opts.uniqueID){//unique ID only display as checkbox
+					tmp_item.html('<input type="checkbox" id="'+opts.prefix+'key_'+unique_value+'" value="'+val+'" name="'+opts.prefix+'key[]">');
+					tmp_item.css('float','left').css('width',opts.TitleBar[key].w);
+				}else{
+					tmp_item.css('float','left').css('overflow','hidden').css('width',opts.TitleBar[key].w);
+					var tmp_val = (key == key_bak)?unique_value:value[key];
+					if(opts.TitleBar[key].hasOwnProperty('render')){//go to render
+						tmp_item.html(renderItem(opts.TitleBar[key]['render'],unique_value,tmp_val));
+					}else{//normal html
+						tmp_item.html(tmp_val);
+					}
+				}
+				if(opts.TitleBar[key].hasOwnProperty('data-align')){
+					tmp_item.css('textAlign',opts.TitleBar[key]['data-align']);
+				}
+				tmp_item.appendTo(tmp_line);
+		});	
 		return unique_value;
 	}
 	function __initItemEventHandler__(unique_value){
 		var tmp_id = '#'+opts.prefix+'item_'+unique_value;
 		var tmp_item = $(tmp_id);
-		//add click/mouseenter/mouseleave listener
-		tmp_item.click(function(){
-			var tmp_box_id = $(this).attr('id').split('_');
-			tmp_box_id = '#'+opts.prefix+'key_'+tmp_box_id[2];
-			$(tmp_box_id).attr('checked',!$(tmp_box_id).attr('checked'));
-			$(this).toggleClass('getchecked');
+		
+		var tmp_check_id = '#'+opts.prefix+'key_'+unique_value;
+		
+		$(tmp_check_id).change(function(){
+			if(this.checked){
+				tmp_item.addClass('getchecked');
+			}else{
+				tmp_item.removeClass('getchecked');
+			}
 		});
-		/*tmp_item.on('mouseleave',function(){
-							$('#op_bar').hide();
-							$(this).toggleClass('yselected');
-		});*/
+		
 		tmp_item.on('mousemove',function(e){
 			if(e.pageY > prev_mouse_posy){
 				mouse_move_direct = 1;//move downward
@@ -165,29 +192,17 @@ var VDataTable = function(node,opts) {
 		});
 
 		tmp_item.on('mouseenter',function(e){
-			//__doDebug__("curr item is:"+curr_item);
 			if(curr_item){//set previous status
 				$(curr_item).removeClass('yselected');
 			}
 			curr_item = '#'+$(this).attr('id');//save as previous
-			//__doDebug__("save curr item is:"+curr_item);
-				
 			$(this).toggleClass('yselected');
-					
 			//get position
 			var tmp_pos = $(this).position();
 					
 			$('#op_bar').on('mouseleave',function(){
 				$(this).hide();
-				//__doDebug__("go to remove curr item is:"+curr_item);	
 				$(curr_item).removeClass('yselected');
-				//re open
-				/*$(curr_item).on('mouseleave',function(){
-					$('#op_bar').hide();
-					$(this).removeClass('yselected');
-				});*/
-			}).on('mouseenter',function(){
-				//$(curr_item).off('mouseleave');
 			}).css('position','absolute')
 				.css('left',tmp_pos.left+'px')
 				.css('top',tmp_pos.top+25+'px')
@@ -229,8 +244,8 @@ var VDataTable = function(node,opts) {
 	}
 	
 	function __showPageBar__(total,total_page,curr_page){
-		var first_page = '<a href="javascript:'+opts.pageCallback+'(1)">首页</a>';
-		var last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">末页</a>';
+		var first_page = '<a href="javascript:'+opts.pageCallback+'(1)">'+opts.lang.first+'</a>';
+		var last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">'+opts.lang.last+'</a>';
 		var up_page = '';
 		var next_page = '';
 
@@ -238,32 +253,32 @@ var VDataTable = function(node,opts) {
 		var up = curr_page-1;
 
 		if(curr_page<total_page && curr_page>1){
-			first_page = '<a href="javascript:'+opts.pageCallback+'(1)">首页</a>';
-			next_page = '<a href="javascript:'+opts.pageCallback+'('+next+')">下一页</a>';
-			up_page = '<a href="javascript:'+opts.pageCallback+'('+up+')">上一页</a>';
-			last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">末页</a>';
+			first_page = '<a href="javascript:'+opts.pageCallback+'(1)">'+opts.lang.first+'</a>';
+			next_page = '<a href="javascript:'+opts.pageCallback+'('+next+')">'+opts.lang.next+'</a>';
+			up_page = '<a href="javascript:'+opts.pageCallback+'('+up+')">'+opts.lang.prev+'</a>';
+			last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">'+opts.lang.last+'</a>';
 		}else if(curr_page>=total_page-1 && curr_page>1){
-			first_page = '<a href="javascript:'+opts.pageCallback+'(1)">首页</a>';
-			next_page = '下一页';
-			up_page = '<a href="javascript:'+opts.pageCallback+'('+up+')">上一页</a>';	
-			last_page = '末页';
+			first_page = '<a href="javascript:'+opts.pageCallback+'(1)">'+opts.lang.first+'</a>';
+			next_page = opts.lang.next;
+			up_page = '<a href="javascript:'+opts.pageCallback+'('+up+')">'+opts.lang.prev+'</a>';	
+			last_page = opts.lang.last;
 		}else if(curr_page == 1 && total_page > 1){
-			first_page = '首页';
-		 	next_page = '<a href="javascript:'+opts.pageCallback+'('+next+')">下一页</a>';
-			up_page = '上一页';
-			last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">末页</a>';
+			first_page = opts.lang.first;
+		 	next_page = '<a href="javascript:'+opts.pageCallback+'('+next+')">'+opts.lang.next+'</a>';
+			up_page = opts.lang.last;
+			last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">'+opts.lang.last+'</a>';
 		}else{
-			up_page = '上一页';
-			next_page = '下一页';
+			up_page = opts.lang.prev;
+			next_page = opts.lang.next;
 		}
-		$('#vdata_pagebar_li').html('记录总数:'+total+'&nbsp;['+first_page+'|'+up_page+'|'+next_page+'|'+last_page+']&nbsp;第'+curr_page+'/'+total_page+'页');
+		$('#vdata_pagebar_li').html('记录总数:'+total+'&nbsp;['+first_page+'&nbsp;|&nbsp;'+up_page+'&nbsp;|&nbsp;'+next_page+'&nbsp;|&nbsp;'+last_page+']&nbsp;第'+curr_page+'/'+total_page+'页');
 	}
 	function __showSelectBar__(){
-		var tmp_all = $('<a href="javascript:void(0)">全选</a>');
+		var tmp_all = $('<a href="javascript:void(0)">'+opts.lang.all+'</a>');
 		tmp_all.bind('click',{msg:1},__getSelected);
-		var tmp_revert = $('<a href="javascript:void(0)">反选</a>');
+		var tmp_revert = $('<a href="javascript:void(0)">'+opts.lang.revert+'</a>');
 		tmp_revert.bind('click',{msg:2},__getSelected);
-		var tmp_cancel = $('<a href="javascript:void(0)">取消</a>');
+		var tmp_cancel = $('<a href="javascript:void(0)">'+opts.lang.cancel+'</a>');
 		tmp_cancel.bind('click',{msg:3},__getSelected);
 		
 		tmp_all.appendTo($('#vdata_select_li'));
@@ -277,10 +292,14 @@ var VDataTable = function(node,opts) {
 				$("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).attr('checked',true);$(this).parent().parent().addClass('getchecked');});
 			break;
 			case 2:
-				$("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).attr('checked',!$(this).attr('checked'))});
+				$("input:checkbox[name='"+tmp_name+"']").each(function(){
+					$(this).attr('checked',!$(this).attr('checked'));
+					$(this).parent().parent().toggleClass('getchecked');
+				});
 			break;
 			case 3:
-				$("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){$(this).attr('checked',false);$(this).parent().parent().removeClass('getchecked');});	
+				$("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).parent().parent().removeClass('getchecked');});
+				$("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){$(this).attr('checked',false);});
 			break;
 		}
 	}
@@ -316,9 +335,9 @@ $.fn.VDataTable = function(conf) {
     //setup default options
     var opts = {
 		w:'100%',
-		h:'auto',
 		m_title_obj:'vtable_title',
 		m_data_obj:'vtable_data',
+		m_ctrl_obj:'vtable_ctrl',
 		ctrl:[],
 		lang:{
 			nodata:'No data founded',
@@ -328,15 +347,12 @@ $.fn.VDataTable = function(conf) {
 			last:'Last'
 		},
 		source:'',//Ajax data source
+		request_way:'get',
+		request_param:{},
         uniqueId:'',//the unique field name,
         prefix:'vt_',//add before wach item
 		TitleBar:{},//Title & data defintion
-		reorderAble:false,
-        api:true,
-		overlayBgColor: 		'#000',		// (string) Background color to overlay; inform a hexadecimal value like: #RRGGBB. Where RR, GG, and BB are the hexadecimal values for the red, green, and blue values of the color.
-		overlayOpacity:			0.8,
-		containerBorderSize:	0,
-		containerResizeSpeed:	100
+        api:true
     };
 
     //if no users options then use the default options
