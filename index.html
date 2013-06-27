@@ -106,11 +106,15 @@
 	var mytable = 0;
 	$(document).ready(function(){
 		mytable = $('#shower').VDataTable({
+			source:'data.php',
+			request_way:'get',//ajax request type get/post
+			request_param:{},
 			m_title_obj:'vtable_title',
 			m_data_obj:'vtable_data',
-			uniqueID:'id',
+			m_ctrl_obj:'vtable_ctrl',
+			uniqueID:'webinar_id',
 			target:'#shower',
-			pagelimit:10,
+			pagelimit:15,
 			pageCallback:'showUserList',
 			op:[
 				{
@@ -128,29 +132,35 @@
 						'title':'ID',  //ID=>id 
 						'w':'10%',
 						'align':'left',
-						'type':'checkbox'  //ID=>id 
+						'display':false,
+						'data-align':'center'//default left
 					},
 					'name':{
 						'title':'Name',//with default view
 						'w':'40%',
 						'align':'left',
-						'type':'html'  //ID=>id 
+						'data-align':'left'
 					},
 					'email':{
 						'title':'Email',
 						'w':'50%',
 						'align':'left',
-						'type':'href',
-						'title':'Email',
-						'src':''
+						'data-align':'left'
 					}
 			},
 			lang:{
 				nodata:'No data founded',
+				choose_op:'Choose operation:',
 				first:'First',
 				next:'Next',
 				prev:'Previous',
-				last:'Last'
+				total:'Total:',
+				page:'page',
+				showing:'showing',
+				last:'Last',
+				all:'All',
+				revert:'Revert',
+				cancel:'Cancel'
 			}
 		});
 	});

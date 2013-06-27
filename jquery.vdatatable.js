@@ -1,12 +1,12 @@
 /*
-@name: jQuery Plugin Template for Coding
+@name: jQuery VDataTable plugins
+@author: cgwxyz[cgwxyz@gmail.com]
+@
 */
 ;(function($) {//[--jQuery Plugin Container
 
-//declare the plugin's version ; use to check the plugin exists
-$.VDataTable = $.VDataTable || {version:'0.1.0'};
+$.VDataTable = $.VDataTable || {version:'1.0.0'};
 
-//[--Plugin Define
 var VDataTable = function(node,opts) {
 
     var me=this,$me=$(this);
@@ -17,14 +17,32 @@ var VDataTable = function(node,opts) {
         getKeyValue: function() {    
 			return __getKeyValue__();
         },
-		removeItem: function(id) {
-			return __removeItem__(id);
-        },
 		loadDataByPage: function(page) {
 			return __loadData__(page);
         },
-		addItem: function(obj) {
-			return __addItem__(obj);
+		getSelected: function() {
+			return __getSelected__();
+        },
+		getCurrValue: function() {
+			return curr_value;
+        },
+		refresh:function(){
+			return __refresh_();
+		},
+		addExtraParam:function(obj){
+			return __addExtraParam__(obj);
+		},
+		resetExtraParam:function(){
+			return __resetExtraParam__();
+		},
+		addLine: function(obj,addToTop) {//addToTop 0/1
+			return __addLine__(obj,addToTop);
+        },
+		removeLine: function(id) {
+			return __removeLine__(id);
+        },
+		updateLine: function(id,obj) {
+			return __updateLine__(id);
         },
         options: function() {
             //return the preset options to users code
@@ -34,13 +52,13 @@ var VDataTable = function(node,opts) {
     });
 
     //Private Variables ( Module Level )
-    var m_var1, m_var2, m_var3;
-	var curr_page = 1;
-	var curr_item = '';
-	var curr_key_id = '';
-	var mouse_move_direct = 0;
-	var prev_mouse_posy = 0;
-	var numPat = new RegExp('^[0-9]+$','i'); 
+	var curr_page = 1;//default page parameter
+	var curr_item = '';//save the id of current line after mouseenter;
+	var curr_value = '';//save key value of current line.
+	var mouse_move_direction = 0;//save previous the direction of mouse move 
+	var prev_mouse_posy = 0;//save previous mouse position
+	var extra_param = {};//save previous mouse position
+	
     //init the plugin
     function __init__(){
 		__initwrapper__();
@@ -51,6 +69,7 @@ var VDataTable = function(node,opts) {
 	function __initwrapper__(){
 		$mine.append('<ul id="'+opts.m_title_obj+'"></ul><ul id="'+opts.m_data_obj+'"></ul><ul id="'+opts.m_ctrl_obj+'"></ul>');
 		var tmp_id = '#'+opts.m_title_obj;
+		//init titlebar
 		$.each(opts.TitleBar,function(index,value){
 			var tmp_obj = $('<li style="width:'+value.w+';text-align:'+value.align+';"></li>');
 			tmp_obj.appendTo($(tmp_id));
@@ -92,23 +111,49 @@ var VDataTable = function(node,opts) {
 		}
 		return target_word;
 	}
+	function __addExtraParam__(obj){
+		__resetExtraParam__();
+		$.each(obj,function(key,value){
+				extra_param[key] = value;
+		});
+	}
+	function __resetExtraParam__(){
+		extra_param = {};
+	}
+	function __refresh_(){
+		__loadData__(curr_page);
+	}
 	function __loadData__(page){
 		$('#op_bar').hide();
+		
+		var request_param = {};
+		if(opts.hasOwnProperty('request_param')){
+			$.each(opts.request_param,function(key,value){
+				request_param[key] = value;
+			});
+		}
+		$.each(extra_param,function(key,value){
+			request_param[key] = value;
+		});
+		request_param['page'] = page;
+		request_param['pagelimit'] = opts.pagelimit;
+		request_param['ss'] = Math.random();
+		
 		$.ajax({
 			url:opts.source,
 			type:opts.request_way,
-			data:{page:page,pagelimit:opts.pagelimit,ss:Math.random()},
+			data:request_param,
 			success:function(res){
 				source_data = $.parseJSON(res);
 				var tmp_id = '#'+opts.m_data_obj;
-				$('.vdata_li').remove();
+				$('.vdata_li').remove();//empty data area.
 				var total = source_data.data.length;
 				if(total==0){
 					$('<li class="vdata_li">'+__parseLang__('nodata')+'</li>').appendTo($(tmp_id));
 				}else{
 					$.each(source_data.data,function(index,value){
-						var unique_value = __initItem__(tmp_id,value,0);
-						__initItemEventHandler__(unique_value);
+						var unique_value = __initLine__(tmp_id,value,0);
+						__initLineEventHandler__(unique_value);
 					});
 					__colorLine__();
 					__showPageBar__(source_data.total,source_data.total_page,page);
@@ -119,7 +164,7 @@ var VDataTable = function(node,opts) {
 	function renderItem(render,key,data){
 		return render.replace('%key%',key).replace('%%',data);
 	}
-	function __initItem__(parent_id,value,default_insert_way){
+	function __initLine__(parent_id,value,default_insert_way){
 		var unique_value = 0;
 		var unique_key = '';
 		$.each(value,function(key,val){
@@ -129,7 +174,7 @@ var VDataTable = function(node,opts) {
 			}
 		});
 		if(unique_key == ''){
-			alert("没有找到主键，请检查数据样式");
+			alert("No primary key founded,please check the data format");
 			return false;
 		}
 		var tmp_line = $('<li class="vdata_li" id="'+opts.prefix+'item_'+unique_value+'"></li>');
@@ -142,7 +187,7 @@ var VDataTable = function(node,opts) {
 				var key_bak = opts.uniqueID+'_bak';
 				var tmp_item = $('<div id="'+opts.prefix+key+'_'+unique_value+'"></div>');
 				if(key == opts.uniqueID){//unique ID only display as checkbox
-					tmp_item.html('<input type="checkbox" id="'+opts.prefix+'key_'+unique_value+'" value="'+val+'" name="'+opts.prefix+'key[]">');
+					tmp_item.html('<input type="checkbox" id="'+opts.prefix+'key_'+unique_value+'" value="'+unique_value+'" name="'+opts.prefix+'key[]">');
 					tmp_item.css('float','left').css('width',opts.TitleBar[key].w);
 				}else{
 					tmp_item.css('float','left').css('overflow','hidden').css('width',opts.TitleBar[key].w);
@@ -150,7 +195,10 @@ var VDataTable = function(node,opts) {
 					if(opts.TitleBar[key].hasOwnProperty('render')){//go to render
 						tmp_item.html(renderItem(opts.TitleBar[key]['render'],unique_value,tmp_val));
 					}else{//normal html
-						tmp_item.html(tmp_val);
+						if(tmp_val.length<1)
+							tmp_item.html('&nbsp;');
+						else
+							tmp_item.html(tmp_val);
 					}
 				}
 				if(opts.TitleBar[key].hasOwnProperty('data-align')){
@@ -160,7 +208,7 @@ var VDataTable = function(node,opts) {
 		});	
 		return unique_value;
 	}
-	function __initItemEventHandler__(unique_value){
+	function __initLineEventHandler__(unique_value){
 		var tmp_id = '#'+opts.prefix+'item_'+unique_value;
 		var tmp_item = $(tmp_id);
 		
@@ -176,12 +224,12 @@ var VDataTable = function(node,opts) {
 		
 		tmp_item.on('mousemove',function(e){
 			if(e.pageY > prev_mouse_posy){
-				mouse_move_direct = 1;//move downward
+				mouse_move_direction = 1;//move downward
 			}else{
-				mouse_move_direct = 0;//move upward
+				mouse_move_direction = 0;//move upward
 			}
 			prev_mouse_posy = e.pageY;
-			if(mouse_move_direct == 1){
+			if(mouse_move_direction == 1){
 				$(this).off('mouseleave');
 			}else{
 				$(this).on('mouseleave',function(){
@@ -196,7 +244,13 @@ var VDataTable = function(node,opts) {
 				$(curr_item).removeClass('yselected');
 			}
 			curr_item = '#'+$(this).attr('id');//save as previous
+			
 			$(this).toggleClass('yselected');
+			
+			//save the value of curr item.
+			var tmp_arr = $(this).attr('id').split('_');
+			var tmp_checkbox = '#'+opts.prefix+'key_'+tmp_arr[tmp_arr.length-1];
+			curr_value = $(tmp_checkbox).val();
 			//get position
 			var tmp_pos = $(this).position();
 					
@@ -235,7 +289,7 @@ var VDataTable = function(node,opts) {
 	
 	function __showOpBar__(parent_node){
 		var tmp_obj = $('<div id="op_bar"></div>');
-		var tmp_label = $('<span>&nbsp;&nbsp;请选择操作:&nbsp;&nbsp;</span>');
+		var tmp_label = $('<span>&nbsp;&nbsp;'+opts.lang.choose_op+'&nbsp;&nbsp;</span>');
 		tmp_label.appendTo(tmp_obj);
 		$.each(opts.op,function(index,value){
 			$('<a href="javascript:void(0)" title="'+value.desc+'" onclick="return '+value.callback+'()">'+value.content+'</a>').appendTo(tmp_obj);
@@ -271,21 +325,35 @@ var VDataTable = function(node,opts) {
 			up_page = opts.lang.prev;
 			next_page = opts.lang.next;
 		}
-		$('#vdata_pagebar_li').html('记录总数:'+total+'&nbsp;['+first_page+'&nbsp;|&nbsp;'+up_page+'&nbsp;|&nbsp;'+next_page+'&nbsp;|&nbsp;'+last_page+']&nbsp;第'+curr_page+'/'+total_page+'页');
+		$('#vdata_pagebar_li').html(opts.lang.total+total+'&nbsp;['+first_page+'&nbsp;|&nbsp;'+up_page+'&nbsp;|&nbsp;'+next_page+'&nbsp;|&nbsp;'+last_page+']&nbsp;'+opts.lang.showing+'<input type="hidden" id="vdatatable_totalpage" value="'+total_page+'"><input type="text" id="vdatatable_currpage" maxlength="10" value="'+curr_page+'"/>/'+total_page+opts.lang.page);
+		$('#vdatatable_currpage').keyup(function(event){
+			if(event.which == 13){
+				var tmp_page = parseInt($(this).val());
+				var total_page = parseInt($('#vdatatable_totalpage').val());
+				if(tmp_page>total_page){
+					tmp_page = total_page;
+				}else if(tmp_page<1){
+					tmp_page = 1;
+				}
+				curr_page = tmp_page;
+				__loadData__(curr_page);
+			}
+		});
+
 	}
 	function __showSelectBar__(){
 		var tmp_all = $('<a href="javascript:void(0)">'+opts.lang.all+'</a>');
-		tmp_all.bind('click',{msg:1},__getSelected);
+		tmp_all.bind('click',{msg:1},__setSelected__);
 		var tmp_revert = $('<a href="javascript:void(0)">'+opts.lang.revert+'</a>');
-		tmp_revert.bind('click',{msg:2},__getSelected);
+		tmp_revert.bind('click',{msg:2},__setSelected__);
 		var tmp_cancel = $('<a href="javascript:void(0)">'+opts.lang.cancel+'</a>');
-		tmp_cancel.bind('click',{msg:3},__getSelected);
+		tmp_cancel.bind('click',{msg:3},__setSelected__);
 		
 		tmp_all.appendTo($('#vdata_select_li'));
 		tmp_revert.appendTo($('#vdata_select_li'));
 		tmp_cancel.appendTo($('#vdata_select_li'));
 	}
-	function __getSelected(event){
+	function __setSelected__(event){
 		var tmp_name=opts.prefix+'key[]';
 		switch(event.data.msg){
 			case 1:
@@ -303,18 +371,52 @@ var VDataTable = function(node,opts) {
 			break;
 		}
 	}
-	function __addItem__(obj){
+	function __getSelected__(){
+		var tmp_name=opts.prefix+'key[]';
+		var tmp_data = [];
+		$("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){
+			tmp_data.push($(this).val());
+		});
+		return tmp_data;
+	}
+	function __addLine__(obj,addToTop){
 		var tmp_box_id = '#'+opts.prefix+'item_'+obj.id;
 		if($(tmp_box_id).length > 0){
-			alert("同样键值的记录已经存在，不允许添加");
+			alert("The primary key has existed");
 		}else{
 			var tmp_id = '#'+opts.m_data_obj;
-			var unique_value = __initItem__(tmp_id,obj,1);
-			__initItemEventHandler__(unique_value);
+			var unique_value = __initLine__(tmp_id,obj,addToTop);
+			__initLineEventHandler__(unique_value);
 			__colorLine__();
 		}
 	}
-	function __removeItem__(key){
+	function __updateLine__(obj){
+		if(obj.hasOwnProperty(opts.uniqueID)){
+			var tmp_box_id = '#'+opts.prefix+'item_'+obj[opts.uniqueID];
+			if($(tmp_box_id).length > 0){
+				var unique_value = obj[opts.uniqueID];
+				var key_bak = opts.uniqueID+'_bak';
+				$.each(opts.TitleBar,function(key,val){
+					if(key !=opts.uniqueID  && key !=key_bak){
+						var tmp_key = '#'+opts.prefix+key+'_'+obj[opts.uniqueID];
+						if(val.hasOwnProperty('render')){
+							$(tmp_key).html(renderItem(val.TitleBar[key]['render'],unique_value,obj[key]));
+						}else{
+							$(tmp_key).html(obj[key]);
+						}
+					}
+				});
+				return true;
+			}else{
+				alert("No matched data founded");
+				return false;
+			}
+		}else{
+			alert("No primary key founded,please verify the new data");
+			return false;
+		}
+	}
+	function __removeLine__(key){
 		var tmp_box_id = '#'+opts.prefix+'item_'+key;
 		$(tmp_box_id).remove();
 		__colorLine__();
@@ -334,6 +436,12 @@ $.fn.VDataTable = function(conf) {
 
     //setup default options
     var opts = {
+		source:'',//Ajax data source
+		request_way:'get',
+		request_param:{},
+        uniqueId:'',//the unique field name,
+        prefix:'vt_',//add before wach item
+		TitleBar:{},//Title & data defintion
 		w:'100%',
 		m_title_obj:'vtable_title',
 		m_data_obj:'vtable_data',
@@ -344,14 +452,9 @@ $.fn.VDataTable = function(conf) {
 			first:'First',
 			next:'Next',
 			prev:'Previous',
-			last:'Last'
+			last:'Last',
+			choose_op:'choose operation:'
 		},
-		source:'',//Ajax data source
-		request_way:'get',
-		request_param:{},
-        uniqueId:'',//the unique field name,
-        prefix:'vt_',//add before wach item
-		TitleBar:{},//Title & data defintion
         api:true
     };
 
