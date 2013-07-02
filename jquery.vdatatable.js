@@ -5,7 +5,7 @@
 */
 ;(function($) {//[--jQuery Plugin Container
 
-$.VDataTable = $.VDataTable || {version:'1.0.0'};
+$.VDataTable = $.VDataTable || {version:'0.1.0'};
 
 var VDataTable = function(node,opts) {
 
@@ -192,6 +192,9 @@ var VDataTable = function(node,opts) {
 				}else{
 					tmp_item.css('float','left').css('overflow','hidden').css('width',opts.TitleBar[key].w);
 					var tmp_val = (key == key_bak)?unique_value:value[key];
+					if(opts.TitleBar[key].hasOwnProperty('format')){//get format
+						tmp_val = opts.TitleBar[key]['format'](tmp_val);
+					}
 					if(opts.TitleBar[key].hasOwnProperty('render')){//go to render
 						tmp_item.html(renderItem(opts.TitleBar[key]['render'],unique_value,tmp_val));
 					}else{//normal html
