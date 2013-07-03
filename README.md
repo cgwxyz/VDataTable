@@ -2,6 +2,7 @@ VDataTable
 ==========
 
 A simple js table component based on jQuery.
+
 I want it have some features below:
 1.simple
 2.pagination and loaded data from specific data source.
@@ -43,7 +44,8 @@ usage:
 						'title':'ID',  //ID=>id 
 						'w':'10%',
 						'align':'left',
-						'type':'checkbox'  //ID=>id 
+						'display':false,//do not display in title
+						'data-align':'center'//the position of data displaying
 					},
 					'name':{
 						'title':'Name',//with default view
@@ -55,9 +57,9 @@ usage:
 						'title':'Email',
 						'w':'50%',
 						'align':'left',
-						'type':'href',
 						'title':'Email',
-						'src':''
+						'format':resetFormart,//a external function,invoke it before render
+						'render':'<a href="javascript:void(0)" click="dotest(\'%key%\')">%%</a>'
 					}
 			},
 			lang:{
@@ -65,7 +67,14 @@ usage:
 				first:'First',
 				next:'Next',
 				prev:'Previous',
-				last:'Last'
+				last:'Last',
+				choose_op:'Please choose:',
+				total:'Total:',
+				page:'Page',
+				showing:'Showing',
+				all:'All',
+				revert:'Revert',
+				cancel:'Cancel'
 			}
 		});
 	});
@@ -76,5 +85,9 @@ usage:
 	function func2(data){
 		
 	}
-	
+	function resetFormat(data){
+		return data;
+	}
 </script>
+
+=======
