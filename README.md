@@ -27,6 +27,7 @@ usage:
 			m_data_obj:'vtable_data',
 			uniqueID:'id',
 			pagelimit:10,
+                        item_height:'',//optional
 			pageCallback:'showUserList',
 			op:[
 				{

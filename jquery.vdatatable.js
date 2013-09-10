@@ -272,13 +272,14 @@ var VDataTable = function(node,opts) {
             curr_value = $(tmp_checkbox).val();
             //get position
             var tmp_pos = $(this).position();
+            var tmp_height = opts.item_height||$(this).height();
                     
             $('#op_bar').on('mouseleave',function(){
                 $(this).hide();
                 $(curr_item).removeClass('yselected');
             }).css('position','absolute')
                 .css('left',tmp_pos.left+'px')
-                .css('top',tmp_pos.top+25+'px')
+                .css('top',tmp_pos.top+tmp_height+'px')
                 .css('width',$(this).css('width'))
                 .show();
         });
