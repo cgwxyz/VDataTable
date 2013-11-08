@@ -230,9 +230,8 @@ var VDataTable = function(node,opts) {
                 }else{
                     tmp_item.css('float','left').css('overflow','hidden').css('width',opts.TitleBar[key].w);
                     var tmp_val = (key == key_bak)?unique_value:value[key];
-                    //if(tmp_val.length<0){
-                    //console.log('get val:'+key+'_'+tmp_val);
-                    if(tmp_val){
+                    
+                    if(typeof tmp_val != 'undefined'){
                         if(tmp_val.length<1)
                             tmp_item.html('&nbsp;');
                         else{
