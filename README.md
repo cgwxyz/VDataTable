@@ -1,4 +1,9 @@
 VDataTable
+---------------------
+
+A simple js table implemented based on jQuery.
+
+=======
 ==========
 
 A simple js table component based on jQuery.
@@ -16,10 +21,10 @@ I want it have some features below:
 
 usage:
 ==========
-    <link type="text/css" rel="stylesheet" href="index.css"/>
-    <script src="./jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
-    <script src="./jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
-    <script type="text/javascript" language="javascript" charset="utf-8">
+	<link type="text/css" rel="stylesheet" href="index.css"/>
+	<script src="./jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+	<script src="./jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+	<script type="text/javascript" language="javascript" charset="utf-8">
 	var mytable = 0;
 	$(document).ready(function(){
 		mytable = $('#shower').VDataTable({
@@ -27,7 +32,7 @@ usage:
 			m_data_obj:'vtable_data',
 			uniqueID:'id',
 			pagelimit:10,
-                        item_height:'',//optional
+						item_height:'',//optional
 			pageCallback:'showUserList',
 			op:[
 				{

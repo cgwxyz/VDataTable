@@ -17,6 +17,9 @@ var VDataTable = function(node,opts) {
         getKeyValue: function() {    
             return __getKeyValue__();
         },
+        getCurrPage: function(){
+            return curr_page;
+        },
         loadDataByPage: function(page) {
             return __loadData__(page);
         },
@@ -26,8 +29,11 @@ var VDataTable = function(node,opts) {
         getCurrValue: function() {
             return curr_value;
         },
-        getSpecValue: function(key) {
-            return m_data_holder[curr_value][key];
+        getSpecValue: function(field) {
+            return m_data_holder[curr_value][field];
+        },
+        getSpecLineValue: function(key,field) {
+            return m_data_holder[key][field];
         },
         refresh:function(){
             return __refresh_();
@@ -85,7 +91,6 @@ var VDataTable = function(node,opts) {
         __showOpBar__($(tmp_id));
         //show select bar		
         var ctrl_id = '#'+opts.m_ctrl_obj;
-        //$(ctrl_id).html('');
         $('<li class="vdata_select_li" id="vdata_select_li"></li>').appendTo($(ctrl_id));
         __showSelectBar__();
         //show page bar
@@ -126,7 +131,26 @@ var VDataTable = function(node,opts) {
     function __refresh_(){
         __loadData__(curr_page);
     }
+    function __showLoading__(){
+        var target_html = '<div class="vdatatable_loading" id="vdatatable_loading_box">';
+        if(opts.loading_src.length>0)
+            target_html += '<img src="'+opts.loading_src+'">';
+        
+        target_html += '<span>&nbsp;&nbsp;'+opts.lang.loading+'</span></div>';
+        $mine.append(target_html);
+        
+        var w = $mine.css('width');
+        var left = $mine.css('height');
+        var box_w = $('#vdatatable_loading_box').css('width');
+        var left = ((parseInt(w) - parseInt(box_w))/2)+'px';
+        
+        $('#vdatatable_loading_box').css('top','-50px').css('left',left);
+    }
+    function __hideLoading__(){
+        $('#vdatatable_loading_box').remove();
+    }
     function __loadData__(page){
+        __showLoading__();
         $('#op_bar').hide();
         
         var request_param = {};
@@ -147,12 +171,14 @@ var VDataTable = function(node,opts) {
             type:opts.request_way,
             data:request_param,
             success:function(res){
+                __hideLoading__();
                 source_data = $.parseJSON(res);
+                __showPageBar__(source_data.total,source_data.total_page,page);
                 var tmp_id = '#'+opts.m_data_obj;
                 $('.vdata_li').remove();//empty data area.
                 var total = source_data.data.length;
                 if(total==0){
-                    $('<li class="vdata_li">'+__parseLang__('nodata')+'</li>').appendTo($(tmp_id));
+                    $('<li class="vdata_li nodata">'+__parseLang__('nodata')+'</li>').appendTo($(tmp_id));
                 }else{
                     m_data_holder = {};
                     $.each(source_data.data,function(index,value){
@@ -161,7 +187,6 @@ var VDataTable = function(node,opts) {
                         __initLineEventHandler__(unique_value);
                     });
                     __colorLine__();
-                    __showPageBar__(source_data.total,source_data.total_page,page);
                 }
             }
         });
@@ -205,19 +230,25 @@ var VDataTable = function(node,opts) {
                 }else{
                     tmp_item.css('float','left').css('overflow','hidden').css('width',opts.TitleBar[key].w);
                     var tmp_val = (key == key_bak)?unique_value:value[key];
-                    if(opts.TitleBar[key].hasOwnProperty('format')){//invoke format function
-                        if(opts.TitleBar[key].hasOwnProperty('format_param'))//send whole line data to it
-                            tmp_val = opts.TitleBar[key]['format'](tmp_val,value,opts.TitleBar[key]['format_param']);
-                        else
-                            tmp_val = opts.TitleBar[key]['format'](tmp_val);
-                    }
-                    if(opts.TitleBar[key].hasOwnProperty('render')){//go to render
-                        tmp_item.html(renderItem(opts.TitleBar[key]['render'],unique_value,value,key,key_bak));
-                    }else{//normal html
+                    
+                    if(typeof tmp_val != 'undefined'){
                         if(tmp_val.length<1)
                             tmp_item.html('&nbsp;');
-                        else
-                            tmp_item.html(tmp_val);
+                        else{
+                            if(opts.TitleBar[key].hasOwnProperty('format')){//invoke format function
+                                if(opts.TitleBar[key].hasOwnProperty('format_param'))//send whole line data to it
+                                    tmp_val = opts.TitleBar[key]['format'](tmp_val,value,opts.TitleBar[key]['format_param']);
+                                else
+                                    tmp_val = opts.TitleBar[key]['format'](tmp_val);
+                            }
+                            if(opts.TitleBar[key].hasOwnProperty('render')){//go to render
+                                tmp_item.html(renderItem(opts.TitleBar[key]['render'],unique_value,value,key,key_bak));
+                            }else{//normal html
+                                tmp_item.html(tmp_val);
+                            }
+                        }
+                    }else{
+                        tmp_item.html('&nbsp;');
                     }
                 }
                 if(opts.TitleBar[key].hasOwnProperty('data-align')){
@@ -341,6 +372,11 @@ var VDataTable = function(node,opts) {
             next_page = '<a href="javascript:'+opts.pageCallback+'('+next+')">'+opts.lang.next+'</a>';
             up_page = opts.lang.last;
             last_page = '<a href="javascript:'+opts.pageCallback+'('+total_page+')">'+opts.lang.last+'</a>';
+        }else if(curr_page == 1 && total_page == 1){
+            first_page = opts.lang.first;
+            next_page = opts.lang.next;
+            up_page = opts.lang.prev;
+            last_page = opts.lang.last;
         }else{
             up_page = opts.lang.prev;
             next_page = opts.lang.next;
@@ -474,6 +510,7 @@ $.fn.VDataTable = function(conf) {
         m_title_obj:'vtable_title',
         m_data_obj:'vtable_data',
         m_ctrl_obj:'vtable_ctrl',
+        loading_src:'./public/img/loading.gif',
         ctrl:[],
         lang:{
             nodata:'No data founded',
@@ -481,7 +518,8 @@ $.fn.VDataTable = function(conf) {
             next:'Next',
             prev:'Previous',
             last:'Last',
-            choose_op:'choose operation:'
+            choose_op:'choose operation:',
+            loading:'Loading...'
         },
         api:true
     };

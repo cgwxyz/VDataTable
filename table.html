@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <title>VDataTable Demo</title>
+    <title>Table Demo</title>
     <style type="text/css">
       form p { min-height: 20px;}
 	  #shower{
@@ -100,21 +100,17 @@
     <h2>Table</h2>
 	<div id="shower">
 	</div>
-    <script src="./jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
-    <script src="./jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+    <script src="./js/jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+    <script src="./js/jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
     <script type="text/javascript" language="javascript" charset="utf-8">
 	var mytable = 0;
 	$(document).ready(function(){
 		mytable = $('#shower').VDataTable({
-			source:'data.php',
-			request_way:'get',//ajax request type get/post
-			request_param:{},
 			m_title_obj:'vtable_title',
 			m_data_obj:'vtable_data',
-			m_ctrl_obj:'vtable_ctrl',
-			uniqueID:'webinar_id',
+			uniqueID:'id',
 			target:'#shower',
-			pagelimit:15,
+			pagelimit:10,
 			pageCallback:'showUserList',
 			op:[
 				{
@@ -132,41 +128,34 @@
 						'title':'ID',  //ID=>id 
 						'w':'10%',
 						'align':'left',
-						'display':false,
-						'data-align':'center'//default left
+						'type':'checkbox'  //ID=>id 
 					},
 					'name':{
 						'title':'Name',//with default view
 						'w':'40%',
 						'align':'left',
-						'data-align':'left'
+						'type':'html'  //ID=>id 
 					},
 					'email':{
 						'title':'Email',
 						'w':'50%',
 						'align':'left',
-						'data-align':'left'
+						'type':'href',
+						'title':'Email',
+						'src':''
 					}
 			},
 			lang:{
 				nodata:'No data founded',
-				choose_op:'Choose operation:',
 				first:'First',
 				next:'Next',
 				prev:'Previous',
-				total:'Total:',
-				page:'page',
-				showing:'showing',
-				last:'Last',
-				all:'All',
-				revert:'Revert',
-				cancel:'Cancel'
+				last:'Last'
 			}
 		});
 	});
 	function func1(){
-		//alert('func1:'+mytable.getKeyValue());
-		doAddData();
+		alert('func1:'+mytable.getKeyValue());
 	}
 	function func2(data){
 		if(!confirm("确定删除此记录")){
@@ -184,7 +173,7 @@
 	}
 	function doAddData(){
 		var obj = {
-			'id':7123128,
+			'id':78,
 			'name':'naasd1',
 			'email':'naasd1@abc.com'
 		};
