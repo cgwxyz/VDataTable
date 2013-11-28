@@ -173,6 +173,7 @@ var VDataTable = function(node,opts) {
             success:function(res){
                 __hideLoading__();
                 source_data = $.parseJSON(res);
+                curr_page=page;
                 __showPageBar__(source_data.total,source_data.total_page,page);
                 var tmp_id = '#'+opts.m_data_obj;
                 $('.vdata_li').remove();//empty data area.
