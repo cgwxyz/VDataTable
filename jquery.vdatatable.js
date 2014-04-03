@@ -430,8 +430,9 @@ var VDataTable = function(node,opts) {
     function __getSelected__(){
         var tmp_name=opts.prefix+'key[]';
         var tmp_data = [];
-        $("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){
-            tmp_data.push($(this).val());
+        $("input:checkbox[name='"+tmp_name+"']").each(function(){
+            if($(this).prop('checked'))
+                tmp_data.push($(this).val());
         });
         return tmp_data;
     }
