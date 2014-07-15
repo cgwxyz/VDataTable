@@ -3,14 +3,14 @@
 @author: cgwxyz[cgwxyz@gmail.com]
 @
 */
-;(function($) {//[--jQuery Plugin Container
+;(function($) {
 
-$.VDataTable = $.VDataTable || {version:'0.1.1'};
+$.VDataTable = $.VDataTable || {version:'0.1.2'};
 
 var VDataTable = function(node,opts) {
 
     var me=this,$me=$(this);
-    var $mine=$(node); //get the plugin's Operation jQuery DOM Element
+    var $mine=$(node);
 
     //Public Methods
     $.extend(me, {
@@ -66,7 +66,8 @@ var VDataTable = function(node,opts) {
     var curr_value = '';//save key value of current line.
     var mouse_move_direction = 0;//save previous the direction of mouse move 
     var prev_mouse_posy = 0;//save previous mouse position
-    var extra_param = {};//save previous mouse position
+    var prev_selected = -1;//save previous selected
+    var extra_param = {};
     var m_data_holder = {};
     //init the plugin
     function __init__(){
@@ -225,7 +226,10 @@ var VDataTable = function(node,opts) {
                 var key_bak = opts.uniqueID+'_bak';
                 var tmp_item = $('<div id="'+opts.prefix+key+'_'+unique_value+'"></div>');
                 if(key == opts.uniqueID){//unique ID only display as checkbox
-                    tmp_item.html('<input type="checkbox" id="'+opts.prefix+'key_'+unique_value+'" value="'+unique_value+'" name="'+opts.prefix+'key[]">');
+                    if(opts.multi==1)
+                        tmp_item.html('<input type="checkbox" id="'+opts.prefix+'key_'+unique_value+'" value="'+unique_value+'" name="'+opts.prefix+'key[]">');
+                    else
+                        tmp_item.html('<input type="radio" id="'+opts.prefix+'key_'+unique_value+'" value="'+unique_value+'" name="'+opts.prefix+'key">');
                     tmp_item.css('float','left').css('width',opts.TitleBar[key].w);
                 }else{
                     tmp_item.css('float','left').css('overflow','hidden').css('width',opts.TitleBar[key].w);
@@ -265,11 +269,19 @@ var VDataTable = function(node,opts) {
         var tmp_check_id = '#'+opts.prefix+'key_'+unique_value;
         
         $(tmp_check_id).change(function(){
+            if(prev_selected != -1){
+                if(opts.multi==0){
+                    var  tmp_key = prev_selected.replace('_key_','_item_');
+                    $('#'+tmp_key).removeClass('getchecked');
+                }
+            }
+            prev_selected = this.id;//vt_key_  vt_item_
             if(this.checked){
                 tmp_item.addClass('getchecked');
             }else{
                 tmp_item.removeClass('getchecked');
             }
+            
         });
         
         tmp_item.on('mousemove',function(e){
@@ -405,34 +417,45 @@ var VDataTable = function(node,opts) {
         var tmp_cancel = $('<a href="javascript:void(0)">'+opts.lang.cancel+'</a>');
         tmp_cancel.bind('click',{msg:3},__setSelected__);
         
-        tmp_all.appendTo($('#vdata_select_li'));
-        tmp_revert.appendTo($('#vdata_select_li'));
-        tmp_cancel.appendTo($('#vdata_select_li'));
+        tmp_all.appendTo($('#vdata_select_li')).css('visibility',opts.selectbarHide?'hidden':'visible');
+        tmp_revert.appendTo($('#vdata_select_li')).css('visibility',opts.selectbarHide?'hidden':'visible');
+        tmp_cancel.appendTo($('#vdata_select_li')).css('visibility',opts.selectbarHide?'hidden':'visible');
     }
     function __setSelected__(event){
         var tmp_name=opts.prefix+'key[]';
         switch(event.data.msg){
             case 1:
-                $("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).attr('checked',true);$(this).parent().parent().addClass('getchecked');});
+                $("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).prop('checked',true);$(this).parent().parent().addClass('getchecked');});
             break;
             case 2:
                 $("input:checkbox[name='"+tmp_name+"']").each(function(){
-                    $(this).attr('checked',!$(this).attr('checked'));
+                    $(this).prop('checked',!$(this).prop('checked'));
                     $(this).parent().parent().toggleClass('getchecked');
                 });
             break;
             case 3:
                 $("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).parent().parent().removeClass('getchecked');});
-                $("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){$(this).attr('checked',false);});
+                $("input:checkbox[name='"+tmp_name+"']").each(function(){$(this).prop('checked',false);});
             break;
         }
     }
     function __getSelected__(){
-        var tmp_name=opts.prefix+'key[]';
+        var tmp_name= opts.multi==1?(opts.prefix+'key[]'):(opts.prefix+'key');
         var tmp_data = [];
-        $("input:checkbox[name='"+tmp_name+"'][checked]").each(function(){
-            tmp_data.push($(this).val());
-        });
+        
+        if(opts.multi==0){
+            $("input:radio[name='"+tmp_name+"']").each(function(){
+                if($(this).prop('checked')){
+                    tmp_data.push($(this).val());
+                }
+            });
+        }else{
+            $("input:checkbox[name='"+tmp_name+"']").each(function(){
+                if($(this).prop('checked')){
+                    tmp_data.push($(this).val());
+                }
+            });
+        }
         return tmp_data;
     }
     function __addLine__(obj,addToTop){
@@ -485,9 +508,8 @@ var VDataTable = function(node,opts) {
         $(tmp_box_id).remove();
         __colorLine__();
     }
-};//--]Plugin Define
+};
 
-//jQuery Plugin Implementation
 $.fn.VDataTable = function(conf) {
 
     //return existing instance // let users can use the Public Methods
@@ -495,7 +517,6 @@ $.fn.VDataTable = function(conf) {
     var el = '';
     el = this.eq(typeof conf == 'number' ? conf : 0).data("VDataTable");
     if(typeof el == 'object'){el = undefined;}
-    //$('#box').append('<p>el is'+el+',type is'+typeof el+'</p>');
     if (el) { return el; }
 
     //setup default options
@@ -512,6 +533,8 @@ $.fn.VDataTable = function(conf) {
         m_ctrl_obj:'vtable_ctrl',
         loading_src:'./public/img/loading.gif',
         ctrl:[],
+        multi:1,
+        selectbarHide:false,
         lang:{
             nodata:'No data founded',
             first:'First',
@@ -519,7 +542,13 @@ $.fn.VDataTable = function(conf) {
             prev:'Previous',
             last:'Last',
             choose_op:'choose operation:',
-            loading:'Loading...'
+            loading:'Loading...',
+            total:'Total:',
+            page:'page',
+            showing:'',
+            all:'ALL',
+            revert:'Revert',
+            cancel:'Cancel'
         },
         api:true
     };
@@ -538,4 +567,4 @@ $.fn.VDataTable = function(conf) {
 
 };
 
-})(jQuery);//--]jQuery Plugin Container
+})(jQuery);

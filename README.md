@@ -1,23 +1,16 @@
 VDataTable
 ---------------------
-
-A simple js table implemented based on jQuery.
-
-=======
-==========
-
 A simple js table component based on jQuery.
 
 I want it have some features below:
-1.simple
-2.pagination and loaded data from specific data source.
-3.different color
-4.multiple choose
-5.each line has a single primary id like DBMS table.
-6.i18N
-7.reorder
-8.showing the corresponding operations for each item when mouseover.
-
+  - simple
+  - pagination and loaded data from specific data source.
+  - different color
+  - multiple choose
+  - each line has a single primary id like DBMS table.
+  - i18N
+  - reorder
+  - showing the corresponding operations for each item when mouseover.
 
 usage:
 ==========
@@ -95,5 +88,3 @@ usage:
 		return data;
 	}
 </script>
-
-=======
