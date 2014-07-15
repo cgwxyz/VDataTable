@@ -441,8 +441,7 @@ var VDataTable = function(node,opts) {
     }
     function __getSelected__(){
         var tmp_name= opts.multi==1?(opts.prefix+'key[]'):(opts.prefix+'key');
-        var tmp_data = [];
-        
+        var tmp_data = [];        
         if(opts.multi==0){
             $("input:radio[name='"+tmp_name+"']").each(function(){
                 if($(this).prop('checked')){
