@@ -15,12 +15,20 @@ I want it have some features below:
 DEMO:
 ==========
 clone the whole project to web document root path. 
-visit localhost/Vdatatable/index.html
+
+visit http://localhost/Vdatatable/index.html
+
+the php return a json object:
+
+'{"total":100,"total_page":10,"page":"1","data":[{"id":10,"name":"name_10","email":"name_10@github.com"},{"id":11,"name":"name_11","email":"name_11@github.com"},{"id":12,"name":"name_12","email":"name_12@github.com"},{"id":13,"name":"name_13","email":"name_13@github.com"},{"id":14,"name":"name_14","email":"name_14@github.com"},{"id":15,"name":"name_15","email":"name_15@github.com"},{"id":16,"name":"name_16","email":"name_16@github.com"},{"id":17,"name":"name_17","email":"name_17@github.com"},{"id":18,"name":"name_18","email":"name_18@github.com"},{"id":19,"name":"name_19","email":"name_19@github.com"}]}'
+
+
 
 usage:
 ==========
 	<link type="text/css" rel="stylesheet" href="index.css"/>
-	<script src="./jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 	<script src="./jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
 	<script type="text/javascript" language="javascript" charset="utf-8">
 	var mytable = 0;
@@ -30,7 +38,7 @@ usage:
 			m_data_obj:'vtable_data',
 			uniqueID:'id',
 			pagelimit:10,
-						item_height:'',//optional
+			item_height:'',//optional
 			pageCallback:'showUserList',
 			op:[
 				{
