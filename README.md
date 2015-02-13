@@ -12,6 +12,11 @@ I want it have some features below:
   - reorder
   - showing the corresponding operations for each item when mouseover.
 
+DEMO:
+==========
+clone the whole project to web document root path. 
+visit localhost/Vdatatable/index.html
+
 usage:
 ==========
 	<link type="text/css" rel="stylesheet" href="index.css"/>

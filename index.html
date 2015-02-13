@@ -7,10 +7,10 @@
     <style type="text/css">
       form p { min-height: 20px;}
 	  #shower{
-		width:600px;
+		width:800px;
 	  }
 	  ul#vtable_title{padding:0;
-		margin:0;
+               margin:0;
 			width:100%;
 			height:25px;
 			line-height:25px;
@@ -38,6 +38,16 @@
 		border:0px;
 		border-bottom:1px solid #CCC;
 	  }
+      #vtable_ctrl{
+        list-style-type:none;
+      }
+      #vtable_ctrl .vdata_select_li{
+        width:200px;
+        float:left;
+      }
+      #vtable_ctrl .vdata_pagebar_li{
+         width:600px;
+      }
 	  .vdata_pagebar_li {
 		text-align:right;
 		font-size:12px;
@@ -86,7 +96,9 @@
 	  .getchecked{
 		background-color:#0099CC;
 	  }
-	  
+      #vdatatable_currpage{
+        width:20px;
+      }	  
 	  #debugbox{
 		width:100%;
 		height:200px;
@@ -100,21 +112,22 @@
     <h2>Table</h2>
 	<div id="shower">
 	</div>
-    <script src="./jquery-1.10.1.min.js" type="text/javascript" language="javascript" charset="utf-8"></script>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
     <script src="./jquery.vdatatable.js" type="text/javascript" language="javascript" charset="utf-8"></script>
     <script type="text/javascript" language="javascript" charset="utf-8">
 	var mytable = 0;
 	$(document).ready(function(){
 		mytable = $('#shower').VDataTable({
-			source:'data.php',
+			source:'demo/data.php',
 			request_way:'get',//ajax request type get/post
 			request_param:{},
 			m_title_obj:'vtable_title',
 			m_data_obj:'vtable_data',
 			m_ctrl_obj:'vtable_ctrl',
-			uniqueID:'webinar_id',
+			uniqueID:'id',
 			target:'#shower',
-			pagelimit:15,
+			pagelimit:10,
 			pageCallback:'showUserList',
 			op:[
 				{
@@ -149,18 +162,18 @@
 					}
 			},
 			lang:{
-				nodata:'No data founded',
-				choose_op:'Choose operation:',
-				first:'First',
-				next:'Next',
-				prev:'Previous',
-				total:'Total:',
-				page:'page',
-				showing:'showing',
-				last:'Last',
-				all:'All',
-				revert:'Revert',
-				cancel:'Cancel'
+				nodata:'没有数据',
+				choose_op:'请选择操作:',
+				first:'首页',
+				next:'下一页',
+				prev:'上一页',
+				total:'总计:',
+				page:'页',
+				showing:'当前',
+				last:'尾页',
+				all:'全部',
+				revert:'反选',
+				cancel:'取消'
 			}
 		});
 	});
@@ -180,7 +193,7 @@
 		mytable.removeItem(key);
 	}
 	function showUserList(page){
-		alert("get page:"+page);
+          mytable.loadDataByPage(page);
 	}
 	function doAddData(){
 		var obj = {
